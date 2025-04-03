@@ -59,5 +59,32 @@ namespace AuthCrud.Services.Usuario
                 return response;
             }
         }
+
+        public async Task<ResponseModel<UsuarioModel>> RemoverUsuario(int id)
+        {
+            ResponseModel<UsuarioModel> response = new ResponseModel<UsuarioModel>();
+            try
+            {
+                var usuario = await _dbContext.Usuarios.FindAsync(id);
+
+                if (usuario == null)
+                {
+                    response.Mensagem = "User not found!";
+                    response.Status = false;
+                    return response;
+                }
+                _dbContext.Usuarios.Remove(usuario);
+                await _dbContext.SaveChangesAsync();
+
+                response.Mensagem = $"Deleted user: {usuario.Nome} successfully!";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Mensagem+= ex.Message;
+                response.Status = false;
+                return response ;
+            }
+        }
     }
 }

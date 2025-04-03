@@ -28,5 +28,12 @@ namespace AuthCrud.Controllers
             var usuario = await _usuarioInterface.ObterUsuarioPorId(id);
             return Ok(usuario);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> RemoverUsuario(int id)
+        {
+            var usuario = await _usuarioInterface.RemoverUsuario(id);
+            return Ok(usuario);
+        }
     }
 }
