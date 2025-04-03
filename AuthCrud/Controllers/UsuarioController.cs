@@ -21,5 +21,12 @@ namespace AuthCrud.Controllers
             var usuarios = await _usuarioInterface.ListarUsuarios();
             return Ok(usuarios);
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> BuscarUsuarioPorId(int id)
+        {
+            var usuario = await _usuarioInterface.ObterUsuarioPorId(id);
+            return Ok(usuario);
+        }
     }
 }
