@@ -1,4 +1,5 @@
 ﻿using AuthCrud.Data;
+using AuthCrud.Dto.Usuario;
 using AuthCrud.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -60,6 +61,27 @@ namespace AuthCrud.Services.Usuario
             }
         }
 
+        public async Task<ResponseModel<UsuarioModel>> RegistrarUsuario(UsuarioCriacaoDto usuarioCriacaoDto)
+        {
+            ResponseModel<UsuarioModel> response = new ResponseModel<UsuarioModel>();
+            try
+            {
+                if (!VerificaSeExisteEmailUsuarioRepetidos(usuarioCriacaoDto))
+                {
+                    response.Mensagem = "Email/User already registered!";
+                    return response;
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                response.Mensagem = ex.Message;
+                response.Status = false;
+                return response;
+            }
+        }
+
         public async Task<ResponseModel<UsuarioModel>> RemoverUsuario(int id)
         {
             ResponseModel<UsuarioModel> response = new ResponseModel<UsuarioModel>();
@@ -85,6 +107,14 @@ namespace AuthCrud.Services.Usuario
                 response.Status = false;
                 return response ;
             }
+        }
+    
+    private bool VerificaSeExisteEmailUsuarioRepetidos(UsuarioCriacaoDto usuarioCriacaoDto)
+        {
+            var usuario = _dbContext.Usuarios.FirstOrDefault(item => item.Email ==
+            usuarioCriacaoDto.Email
+            || usuarioCriacaoDto.User == usuarioCriacaoDto.User);
+            return usuario != null ? false : true;
         }
     }
 }
