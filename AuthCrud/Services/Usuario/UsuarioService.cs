@@ -1,6 +1,8 @@
 ﻿using AuthCrud.Data;
 using AuthCrud.Dto.Usuario;
 using AuthCrud.Models;
+using AuthCrud.Services.Senha;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 
 namespace AuthCrud.Services.Usuario
@@ -9,9 +11,13 @@ namespace AuthCrud.Services.Usuario
     {
         #region ctor
         private readonly AppDbContext _dbContext;
-        public UsuarioService(AppDbContext dbContext)
+        private readonly ISenhaInterface _senhaInterface;
+        private readonly IMapper _mapper;
+        public UsuarioService(AppDbContext dbContext, ISenhaInterface senhaInterface, IMapper mapper)
         {
             _dbContext = dbContext;
+            _senhaInterface = senhaInterface;
+            _mapper = mapper;
         }
         #endregion
         public async Task<ResponseModel<List<UsuarioModel>>> ListarUsuarios()
@@ -72,7 +78,18 @@ namespace AuthCrud.Services.Usuario
                     return response;
                 }
 
+                _senhaInterface.CriarSenhaHash(usuarioCriacaoDto.Senha, out byte[] senhaHash, out byte[] senhaSalt);
 
+                UsuarioModel usuario = _mapper.Map<UsuarioModel>(usuarioCriacaoDto);
+                usuario.SenhaHash = senhaHash;
+                usuario.SenhaSalt = senhaSalt;
+
+                _dbContext.Add(usuario);
+                await _dbContext.SaveChangesAsync();
+
+                response.Mensagem = "Usuário cadastrado com sucesso!";
+                response.Dados = usuario;
+                return response;
             }
             catch (Exception ex)
             {
@@ -113,7 +130,7 @@ namespace AuthCrud.Services.Usuario
         {
             var usuario = _dbContext.Usuarios.FirstOrDefault(item => item.Email ==
             usuarioCriacaoDto.Email
-            || usuarioCriacaoDto.User == usuarioCriacaoDto.User);
+            || item.User == usuarioCriacaoDto.User);
             return usuario != null ? false : true;
         }
     }
