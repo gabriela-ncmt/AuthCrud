@@ -9,5 +9,6 @@ namespace AuthCrud.Services.Usuario
         Task<ResponseModel<UsuarioModel>> ObterUsuarioPorId(int id);
         Task<ResponseModel<UsuarioModel>> RemoverUsuario(int id);
         Task<ResponseModel<UsuarioModel>> RegistrarUsuario(UsuarioCriacaoDto usuarioCriacaoDto);
+        Task<ResponseModel<UsuarioModel>> EditarUsuario(UsuarioEdicaoDto usuarioEdicaoDto);
     }
 }

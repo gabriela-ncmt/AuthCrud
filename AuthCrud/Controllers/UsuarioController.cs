@@ -1,4 +1,5 @@
-﻿using AuthCrud.Models;
+﻿using AuthCrud.Dto.Usuario;
+using AuthCrud.Models;
 using AuthCrud.Services.Usuario;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,6 +34,13 @@ namespace AuthCrud.Controllers
         public async Task<IActionResult> RemoverUsuario(int id)
         {
             var usuario = await _usuarioInterface.RemoverUsuario(id);
+            return Ok(usuario);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> EditarUsuario(UsuarioEdicaoDto usuarioEdicaoDto)
+        {
+            var usuario = await _usuarioInterface.EditarUsuario(usuarioEdicaoDto);
             return Ok(usuario);
         }
     }
