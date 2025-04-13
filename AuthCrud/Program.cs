@@ -1,4 +1,5 @@
 using AuthCrud.Data;
+using AuthCrud.Services.Auditoria;
 using AuthCrud.Services.Senha;
 using AuthCrud.Services.Usuario;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -16,7 +17,11 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IUsuarioInterface, UsuarioService>();
 builder.Services.AddScoped<ISenhaInterface, SenhaService>();
+builder.Services.AddScoped<IAuditoriaInterface, AuditoriaService>();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

@@ -2,9 +2,12 @@
 using AuthCrud.Dto.Login;
 using AuthCrud.Dto.Usuario;
 using AuthCrud.Models;
+using AuthCrud.Services.Auditoria;
 using AuthCrud.Services.Senha;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.Json;
+using Newtonsoft.Json;
 
 namespace AuthCrud.Services.Usuario
 {
@@ -14,13 +17,22 @@ namespace AuthCrud.Services.Usuario
         private readonly AppDbContext _dbContext;
         private readonly ISenhaInterface _senhaInterface;
         private readonly IMapper _mapper;
-        public UsuarioService(AppDbContext dbContext, ISenhaInterface senhaInterface, IMapper mapper)
+        private readonly IAuditoriaInterface _auditoriaInterface;
+        private readonly IHttpContextAccessor _contextAccessor;
+        public UsuarioService(
+            AppDbContext dbContext,
+            ISenhaInterface senhaInterface, 
+            IMapper mapper,
+            IAuditoriaInterface auditoriaInterface,
+            IHttpContextAccessor contextAccessor)
         {
             _dbContext = dbContext;
             _senhaInterface = senhaInterface;
             _mapper = mapper;
+            _auditoriaInterface = auditoriaInterface;
+            _contextAccessor = contextAccessor;
         }
-
+        #endregion
         public async Task<ResponseModel<UsuarioModel>> EditarUsuario(UsuarioEdicaoDto usuarioEdicaoDto)
         {
             ResponseModel<UsuarioModel> response = new ResponseModel<UsuarioModel>();
@@ -33,6 +45,8 @@ namespace AuthCrud.Services.Usuario
                     return response;
                 }
 
+                var dadosAntes = JsonConvert.SerializeObject(usuarioBanco);
+
                 usuarioBanco.Nome = usuarioEdicaoDto.Nome;
                 usuarioBanco.Sobrenome = usuarioEdicaoDto.Sobrenome;
                 usuarioBanco.Email = usuarioEdicaoDto.Email;
@@ -44,6 +58,16 @@ namespace AuthCrud.Services.Usuario
 
                 response.Mensagem = "Usuário editado com sucesso!";
                 response.Dados = usuarioBanco;
+
+                var dadosDepois = JsonConvert.SerializeObject(usuarioBanco);
+
+                var usuarioId = _contextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+
+                await _auditoriaInterface.RegistrarAuditoriaAsync(
+                    "Atualização", 
+                    usuarioId,
+                    $"Antes: {dadosAntes}, Depois: {dadosDepois}");
+
                 return response;
 
             }
@@ -54,7 +78,6 @@ namespace AuthCrud.Services.Usuario
                 return response;
             }
         }
-        #endregion
         public async Task<ResponseModel<List<UsuarioModel>>> ListarUsuarios()
         {
             ResponseModel<List<UsuarioModel>> response= new ResponseModel<List<UsuarioModel>>();
@@ -189,10 +212,20 @@ namespace AuthCrud.Services.Usuario
                     response.Status = false;
                     return response;
                 }
+                var dadosAntes = JsonConvert.SerializeObject(usuario);
+
                 _dbContext.Usuarios.Remove(usuario);
                 await _dbContext.SaveChangesAsync();
 
                 response.Mensagem = $"Deleted user: {usuario.Nome} successfully!";
+
+                var usuarioId = _contextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+
+                await _auditoriaInterface.RegistrarAuditoriaAsync(
+                    "Remoção",
+                    usuarioId,
+                    $"Antes: {dadosAntes}");
+
                 return response;
             }
             catch (Exception ex)

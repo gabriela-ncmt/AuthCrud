@@ -9,5 +9,6 @@ namespace AuthCrud.Data
         {
         }
         public DbSet<UsuarioModel> Usuarios {get; set;}
+        public DbSet<AuditoriaModel> Auditorias {get; set;}
     }
 }
