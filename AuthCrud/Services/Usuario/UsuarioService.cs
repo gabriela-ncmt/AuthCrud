@@ -1,4 +1,5 @@
 ﻿using AuthCrud.Data;
+using AuthCrud.Dto.Login;
 using AuthCrud.Dto.Usuario;
 using AuthCrud.Models;
 using AuthCrud.Services.Senha;
@@ -77,6 +78,46 @@ namespace AuthCrud.Services.Usuario
             }
         }
 
+        public async Task<ResponseModel<UsuarioModel>> Login(UsuarioLoginDto usuarioLoginDto)
+        {
+            ResponseModel<UsuarioModel> response = new ResponseModel<UsuarioModel>();
+            try
+            {
+                var usuario = await _dbContext.Usuarios.FirstOrDefaultAsync(userBanco =>
+                userBanco.Email == usuarioLoginDto.Email);
+
+                if (usuario == null)
+                {
+                    response.Mensagem = "Credenciais inválidas!";
+                    return response;
+                }
+
+                if (!_senhaInterface.VerificaSenhaHash(usuarioLoginDto.Senha, usuario.SenhaHash, usuario.SenhaSalt))
+                {
+                    response.Mensagem = "Credenciais inválidas!";
+                    return response;
+                }
+
+                var token = _senhaInterface.CriarToken(usuario);
+
+                usuario.Token = token;
+                _dbContext.Update(usuario);
+                await _dbContext.SaveChangesAsync();
+
+                response.Dados = usuario;
+                response.Mensagem = "Usuário logado com sucesso!";
+
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Mensagem = ex.Message;
+                response.Status = false;
+                return response;
+            }
+        }
+
         public async Task<ResponseModel<UsuarioModel>> ObterUsuarioPorId(int id)
         {
             ResponseModel<UsuarioModel> response = new ResponseModel<UsuarioModel>();
@@ -117,6 +158,8 @@ namespace AuthCrud.Services.Usuario
                 UsuarioModel usuario = _mapper.Map<UsuarioModel>(usuarioCriacaoDto);
                 usuario.SenhaHash = senhaHash;
                 usuario.SenhaSalt = senhaSalt;
+                usuario.DataCriacao = DateTime.Now;
+                usuario.DataAlteracao = DateTime.Now;
 
                 _dbContext.Add(usuario);
                 await _dbContext.SaveChangesAsync();
