@@ -1,12 +1,14 @@
 ﻿using AuthCrud.Dto.Usuario;
 using AuthCrud.Models;
 using AuthCrud.Services.Usuario;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuthCrud.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioInterface _usuarioInterface;
